@@ -31,7 +31,7 @@ func NewNode(move Move, parent *Node, state State) *Node {
 func (n *Node) UCTSelectChild() *Node {
 	max, idx := minFloat64, -1
 	for i, c := range n.ChildNodes {
-		s := c.Wins/float64(c.Visits) + math.Sqrt(2*math.Log(float64(n.Visits))/float64(c.Visits))
+		s := c.Wins/float64(c.Visits) + 1.44*math.Sqrt(2*math.Log(float64(n.Visits))/float64(c.Visits))
 		if s > max {
 			max = s
 			idx = i

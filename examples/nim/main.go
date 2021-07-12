@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-mcts/mcts"
 	"math/rand"
@@ -15,9 +16,13 @@ func UCTPlayGame() {
 	for len(state.GetMoves()) != 0 {
 		var m mcts.Move
 		if state.playerJustMoved == 1 {
-			m = mcts.UCT(state, 1000)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			m = mcts.MultiGoroutineUCT(ctx, state, 5)
+			cancel()
 		} else {
-			m = mcts.UCT(state, 100)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			m = mcts.MultiGoroutineUCT(ctx, state, 5)
+			cancel()
 		}
 		fmt.Printf("chips: %d, player: %d, count: %d\n", state.chips, 3-state.playerJustMoved, m)
 		state.DoMove(m)

@@ -5,19 +5,14 @@ import (
 	"github.com/go-mcts/mcts"
 )
 
-var (
-	_ mcts.Move  = (*NimMove)(nil)
-	_ mcts.State = (*NimState)(nil)
-)
-
-type NimMove int
+var _ mcts.State = (*NimState)(nil)
 
 type NimState struct {
-	playerJustMoved int
+	playerJustMoved mcts.Player
 	chips           int
 }
 
-func (s *NimState) PlayerJustMoved() int {
+func (s *NimState) PlayerJustMoved() mcts.Player {
 	return s.playerJustMoved
 }
 
@@ -34,7 +29,7 @@ func (s *NimState) DoMove(move mcts.Move) {
 		panic(fmt.Errorf("illegal move: %v", m))
 	}
 	s.chips -= int(m)
-	s.playerJustMoved = 3 - s.playerJustMoved
+	s.playerJustMoved = mcts.ChangePlayer(s.playerJustMoved)
 }
 
 func min(x, y int) int {
@@ -53,13 +48,13 @@ func (s *NimState) GetMoves() []mcts.Move {
 	return moves
 }
 
-func (s *NimState) GetResult(playerJustMoved int) float64 {
+func (s *NimState) GetResult(playerJustMoved mcts.Player) mcts.Result {
 	if s.chips != 0 {
 		panic(fmt.Errorf("illegal chips: %v", s.chips))
 	}
 	if s.playerJustMoved == playerJustMoved {
-		return 1.0
+		return mcts.ResultWin
 	} else {
-		return 0.0
+		return mcts.ResultDraw
 	}
 }

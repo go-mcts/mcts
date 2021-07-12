@@ -5,9 +5,13 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"time"
 )
 
-func MultiGoroutineUCT(ctx context.Context, rootState State, numberOfGoroutines int) Move {
+func MultiGoroutineUCT(rootState State, maxTime time.Duration, numberOfGoroutines int) Move {
+	ctx, cancel := context.WithTimeout(context.Background(), maxTime)
+	defer cancel()
+
 	nodeChan := make(chan *Node, numberOfGoroutines)
 
 	for i := 0; i < numberOfGoroutines; i++ {
@@ -18,16 +22,20 @@ func MultiGoroutineUCT(ctx context.Context, rootState State, numberOfGoroutines 
 
 	visits := make(map[Move]int)
 	wins := make(map[Move]float64)
+	totalVis := 0
 	for i := 0; i < numberOfGoroutines; i++ {
 		node := <-nodeChan
+		totalVis += node.Visits
 		for _, child := range node.ChildNodes {
 			visits[child.Move] += child.Visits
 			wins[child.Move] += child.Wins
 		}
 	}
 
-	bestScore := minFloat64
-	var bestMove Move
+	var (
+		bestScore = minFloat64
+		bestMove  Move
+	)
 
 	for m, v := range visits {
 		w := wins[m]
@@ -38,7 +46,8 @@ func MultiGoroutineUCT(ctx context.Context, rootState State, numberOfGoroutines 
 		}
 	}
 
-	log.Printf("player %d score: %.2f", 3-rootState.PlayerJustMoved(), bestScore)
+	log.Printf("player %d score: %.2f, visits: %d\n",
+		3-rootState.PlayerJustMoved(), bestScore, totalVis)
 
 	return bestMove
 }
@@ -66,8 +75,8 @@ LOOP:
 				node = node.AddChild(m, state)
 			}
 
-			for len(state.GetMoves()) != 0 {
-				state.DoMove(randomChoice(state.GetMoves()))
+			for moves := state.GetMoves(); len(moves) != 0; moves = state.GetMoves() {
+				state.DoMove(randomChoice(moves))
 			}
 
 			for node != nil {
@@ -80,6 +89,7 @@ LOOP:
 	return rootNode
 }
 
+//goland:noinspection GoUnusedExportedFunction
 func UCT(rootState State, maxIterations int) Move {
 	rootNode := NewNode(nil, nil, rootState)
 
@@ -98,8 +108,8 @@ func UCT(rootState State, maxIterations int) Move {
 			node = node.AddChild(m, state)
 		}
 
-		for len(state.GetMoves()) != 0 {
-			state.DoMove(randomChoice(state.GetMoves()))
+		for moves := state.GetMoves(); len(moves) != 0; moves = state.GetMoves() {
+			state.DoMove(randomChoice(moves))
 		}
 
 		for node != nil {

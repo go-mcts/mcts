@@ -13,7 +13,7 @@ type Node struct {
 	Wins            float64
 	Visits          int
 	UntriedMoves    []Move
-	PlayerJustMoved int
+	PlayerJustMoved Player
 }
 
 func NewNode(move Move, parent *Node, state State) *Node {
@@ -55,7 +55,7 @@ func (n *Node) AddChild(move Move, state State) *Node {
 	return node
 }
 
-func (n *Node) Update(result float64) {
+func (n *Node) Update(result Result) {
 	n.Visits++
-	n.Wins += result
+	n.Wins += float64(result)
 }

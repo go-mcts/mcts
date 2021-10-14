@@ -4,13 +4,16 @@
 
 package mcts
 
+import "math/rand"
+
 type Move interface{}
 
 type State interface {
 	PlayerToMove() int
 	HasMoves() bool
 	GetMoves() []Move
-	DoMove()
-	DoRandomMove()
-	GetResult() float64
+	DoMove(Move)
+	DoRandomMove(*rand.Rand)
+	GetResult(int) float64
+	Clone() State
 }

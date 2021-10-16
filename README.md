@@ -105,6 +105,20 @@ state := &State{
 move := mcts.ComputeMove(state, mcts.MaxIterations(100000), mcts.Verbose(true))
 ```
 
+By default, `runtime.NumCPU()` goroutines are started for compute:
+
+```
+2021-10-16T16:13:33+08:00       DEBUG   100000 games played (493618.37 / second).
+2021-10-16T16:13:33+08:00       DEBUG   100000 games played (487598.00 / second).
+2021-10-16T16:13:33+08:00       DEBUG   100000 games played (474579.62 / second).
+2021-10-16T16:13:33+08:00       DEBUG   100000 games played (470514.17 / second).
+2021-10-16T16:13:33+08:00       DEBUG   Move: 2 (16% visits) (48% wins)
+2021-10-16T16:13:33+08:00       DEBUG   Move: 1 (72% visits) (67% wins)
+2021-10-16T16:13:33+08:00       DEBUG   Move: 3 (13% visits) (48% wins)
+2021-10-16T16:13:33+08:00       DEBUG   Best: 1 (72% visits) (67% wins)
+2021-10-16T16:13:33+08:00       DEBUG   400000 games played in 0.21 s. (1881366.23 / second, 4 parallel jobs).
+```
+
 ## License
 
 This project is under the MIT License. See the [LICENSE](LICENSE) file for the full license text.

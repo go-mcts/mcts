@@ -14,7 +14,7 @@ import (
 func TestNim(t *testing.T) {
 	for chips := 4; chips <= 21; chips++ {
 		if chips%4 != 0 {
-			state := &State{
+			state := &state{
 				playerToMove: 1,
 				chips:        chips,
 			}

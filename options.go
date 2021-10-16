@@ -9,15 +9,16 @@ import (
 	"time"
 )
 
+// Options use functional-option to customize mcts
 type Options struct {
-	Groutines     int
+	Goroutines    int
 	MaxIterations int
 	MaxTime       time.Duration
 	Verbose       bool
 }
 
 var defaultOptions = Options{
-	Groutines:     runtime.NumCPU(),
+	Goroutines:    runtime.NumCPU(),
 	MaxIterations: 10000,
 	MaxTime:       -1,
 	Verbose:       false,
@@ -25,24 +26,28 @@ var defaultOptions = Options{
 
 type Option func(*Options)
 
+// Goroutines number of goroutines, default is runtime.NumCPU()
 func Goroutines(number int) Option {
 	return func(o *Options) {
-		o.Groutines = number
+		o.Goroutines = number
 	}
 }
 
+// MaxIterations maximum number of iterations, default is 10000
 func MaxIterations(iter int) Option {
 	return func(o *Options) {
 		o.MaxIterations = iter
 	}
 }
 
+// MaxTime search timeout, default is not limit
 func MaxTime(d time.Duration) Option {
 	return func(o *Options) {
 		o.MaxTime = d
 	}
 }
 
+// Verbose print details log, default is false
 func Verbose(v bool) Option {
 	return func(o *Options) {
 		o.Verbose = v

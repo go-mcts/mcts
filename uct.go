@@ -64,6 +64,7 @@ func computeTree(rootState State, rd *rand.Rand, opts ...Option) *node {
 	return root
 }
 
+// ComputeMove start multi goroutines to compute best move
 func ComputeMove(rootState State, opts ...Option) Move {
 	options := newOptions(opts...)
 
@@ -82,8 +83,8 @@ func ComputeMove(rootState State, opts ...Option) Move {
 
 	startTime := time.Now()
 
-	rootFutures := make(chan *node, options.Groutines)
-	for i := 0; i < options.Groutines; i++ {
+	rootFutures := make(chan *node, options.Goroutines)
+	for i := 0; i < options.Goroutines; i++ {
 		go func() {
 			rd := rand.New(rand.NewSource(time.Now().UnixNano()))
 			rootFutures <- computeTree(rootState, rd, opts...)
@@ -93,7 +94,7 @@ func ComputeMove(rootState State, opts ...Option) Move {
 	visits := make(map[Move]int)
 	wins := make(map[Move]float64)
 	gamePlayed := 0
-	for i := 0; i < options.Groutines; i++ {
+	for i := 0; i < options.Goroutines; i++ {
 		root := <-rootFutures
 		gamePlayed += root.visits
 		for _, c := range root.children {
@@ -133,7 +134,7 @@ func ComputeMove(rootState State, opts ...Option) Move {
 			gamePlayed,
 			now.Sub(startTime).Seconds(),
 			float64(gamePlayed)/now.Sub(startTime).Seconds(),
-			options.Groutines,
+			options.Goroutines,
 		)
 	}
 	return bestMove

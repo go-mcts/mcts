@@ -34,7 +34,7 @@ func Test_newOptions(t *testing.T) {
 				},
 			},
 			Options{
-				Groutines:     runtime.NumCPU(),
+				Goroutines:    runtime.NumCPU(),
 				MaxIterations: 100000,
 				MaxTime:       -1,
 				Verbose:       true,
@@ -51,7 +51,7 @@ func Test_newOptions(t *testing.T) {
 				},
 			},
 			Options{
-				Groutines:     1,
+				Goroutines:    1,
 				MaxIterations: 100000,
 				MaxTime:       5 * time.Second,
 				Verbose:       true,

@@ -6,51 +6,8 @@ package mcts
 
 import (
 	"math/rand"
-	"runtime"
 	"time"
 )
-
-type Options struct {
-	NumberOfGoroutines int
-	MaxIterations      int
-	MaxTime            time.Duration
-
-	// TODO: add verbose log
-}
-
-type Option func(*Options)
-
-func NumberOfGoroutines(number int) Option {
-	return func(o *Options) {
-		o.NumberOfGoroutines = number
-	}
-}
-
-func MaxIterations(iter int) Option {
-	return func(o *Options) {
-		o.MaxIterations = iter
-	}
-}
-
-func MaxTime(d time.Duration) Option {
-	return func(o *Options) {
-		o.MaxTime = d
-	}
-}
-
-func newOptions(opts ...Option) Options {
-	options := Options{
-		NumberOfGoroutines: runtime.NumCPU(),
-		MaxIterations:      10000,
-		MaxTime:            -1,
-	}
-
-	for _, o := range opts {
-		o(&options)
-	}
-
-	return options
-}
 
 func ComputeTree(rootState State, rd *rand.Rand, opts ...Option) *Node {
 	options := newOptions(opts...)
@@ -63,10 +20,8 @@ func ComputeTree(rootState State, rd *rand.Rand, opts ...Option) *Node {
 		panic("only support player1 and player2")
 	}
 
-	var deadline time.Time
-	if options.MaxTime >= 0 {
-		deadline = time.Now().Add(options.MaxTime)
-	}
+	startTime := time.Now()
+	printTime := startTime
 
 	root := NewNode(rootState)
 	for i := 1; i <= options.MaxIterations || options.MaxIterations < 0; i++ {
@@ -93,8 +48,16 @@ func ComputeTree(rootState State, rd *rand.Rand, opts ...Option) *Node {
 			node = node.Parent
 		}
 
-		if !deadline.IsZero() && time.Now().Before(deadline) {
-			break
+		if options.Verbose || options.MaxTime >= 0 {
+			now := time.Now()
+			if options.Verbose && (now.Sub(printTime) >= time.Second || i == options.MaxIterations) {
+				Debugf("%d games played (%.2f / second).", i, float64(i)/now.Sub(startTime).Seconds())
+				printTime = now
+			}
+
+			if options.MaxTime >= 0 && now.Sub(startTime) >= options.MaxTime {
+				break
+			}
 		}
 	}
 
@@ -117,8 +80,10 @@ func ComputeMove(rootState State, opts ...Option) Move {
 		return moves[0]
 	}
 
-	rootFutures := make(chan *Node, options.NumberOfGoroutines)
-	for i := 0; i < options.NumberOfGoroutines; i++ {
+	startTime := time.Now()
+
+	rootFutures := make(chan *Node, options.Groutines)
+	for i := 0; i < options.Groutines; i++ {
 		go func() {
 			rd := rand.New(rand.NewSource(time.Now().UnixNano()))
 			rootFutures <- ComputeTree(rootState, rd, opts...)
@@ -128,7 +93,7 @@ func ComputeMove(rootState State, opts ...Option) Move {
 	visits := make(map[Move]int)
 	wins := make(map[Move]float64)
 	gamePlayed := 0
-	for i := 0; i < options.NumberOfGoroutines; i++ {
+	for i := 0; i < options.Groutines; i++ {
 		root := <-rootFutures
 		gamePlayed += root.Visits
 		for _, c := range root.Children {
@@ -146,6 +111,30 @@ func ComputeMove(rootState State, opts ...Option) Move {
 			bestMove = move
 			bestScore = expectedSuccessRate
 		}
+
+		if options.Verbose {
+			Debugf("Move: %v (%2d%% visits) (%2d%% wins)",
+				move, int(100.0*float64(v)/float64(gamePlayed)+0.5), int(100.0*w/float64(v)+0.5))
+		}
+	}
+
+	if options.Verbose {
+		bestWins := wins[bestMove]
+		bestVisits := visits[bestMove]
+		Debugf("Best: %v (%2d%% visits) (%2d%% wins)",
+			bestMove,
+			int(100.0*float64(bestVisits)/float64(gamePlayed)+0.5),
+			int(100.0*bestWins/float64(bestVisits)+0.5),
+		)
+
+		now := time.Now()
+		Debugf(
+			"%d games played in %.2f s. (%.2f / second, %d parallel jobs).",
+			gamePlayed,
+			now.Sub(startTime).Seconds(),
+			float64(gamePlayed)/now.Sub(startTime).Seconds(),
+			options.Groutines,
+		)
 	}
 	return bestMove
 }

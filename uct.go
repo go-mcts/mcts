@@ -91,23 +91,24 @@ func ComputeMove(rootState State, opts ...Option) Move {
 		}()
 	}
 
-	visits := make(map[Move]int)
-	wins := make(map[Move]float64)
+	visits := newCounter()
+	wins := newCounter()
 	gamePlayed := 0
 	for i := 0; i < options.Goroutines; i++ {
 		root := <-rootFutures
 		gamePlayed += root.visits
 		for _, c := range root.children {
-			visits[c.move] += c.visits
-			wins[c.move] += c.wins
+			visits.incr(c.move, float64(c.visits))
+			wins.incr(c.move, c.wins)
 		}
 	}
 
 	bestScore := float64(-1)
 	var bestMove Move
-	for move, v := range visits {
-		w := wins[move]
-		expectedSuccessRate := (w + 1) / (float64(v) + 2)
+	visits.rng(func(key interface{}, v float64) {
+		move := key.(Move)
+		w := wins.get(move)
+		expectedSuccessRate := (w + 1) / (v + 2)
 		if expectedSuccessRate > bestScore {
 			bestMove = move
 			bestScore = expectedSuccessRate
@@ -115,17 +116,17 @@ func ComputeMove(rootState State, opts ...Option) Move {
 
 		if options.Verbose {
 			Debugf("Move: %v (%2d%% visits) (%2d%% wins)",
-				move, int(100.0*float64(v)/float64(gamePlayed)+0.5), int(100.0*w/float64(v)+0.5))
+				move, int(100.0*v/float64(gamePlayed)+0.5), int(100.0*w/v+0.5))
 		}
-	}
+	})
 
 	if options.Verbose {
-		bestWins := wins[bestMove]
-		bestVisits := visits[bestMove]
+		bestWins := wins.get(bestMove)
+		bestVisits := visits.get(bestMove)
 		Debugf("Best: %v (%2d%% visits) (%2d%% wins)",
 			bestMove,
-			int(100.0*float64(bestVisits)/float64(gamePlayed)+0.5),
-			int(100.0*bestWins/float64(bestVisits)+0.5),
+			int(100.0*bestVisits/float64(gamePlayed)+0.5),
+			int(100.0*bestWins/bestVisits+0.5),
 		)
 
 		now := time.Now()

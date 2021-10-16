@@ -34,6 +34,8 @@ func Goroutines(number int) Option {
 }
 
 // MaxIterations maximum number of iterations, default is 10000
+//
+// iter < 0: not limit
 func MaxIterations(iter int) Option {
 	return func(o *Options) {
 		o.MaxIterations = iter

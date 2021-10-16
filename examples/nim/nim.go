@@ -66,13 +66,13 @@ func (s *State) DoRandomMove(rd *rand.Rand) {
 	s.checkInvariant()
 }
 
-func (s *State) GetResult(currentPlayer int) float64 {
+func (s *State) GetResult(currentPlayerToMove int) float64 {
 	if s.chips != 0 {
 		panic("game not over")
 	}
 	s.checkInvariant()
 
-	if s.playerToMove == currentPlayer {
+	if s.playerToMove == currentPlayerToMove {
 		return 1.0
 	}
 	return 0.0

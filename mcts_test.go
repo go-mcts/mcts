@@ -22,7 +22,7 @@ var (
 //
 // Player 2 has five options:
 //		  1: Player 1 wins.
-//		2-5: Player X wins. (default: 2)
+//		2-5: Player X wins.
 //
 // If X == 1, player 1 should play 2 for a guaranteed win after the next move by player 2.
 // If X == 2, player 1 should play 1 for an immediate draw.
@@ -95,7 +95,7 @@ func (s *testGameState) DoRandomMove(rd *rand.Rand) {
 	}
 }
 
-func (s *testGameState) GetResult(currentPlayer int) float64 {
+func (s *testGameState) GetResult(currentPlayerToMove int) float64 {
 	if s.winner < 0 {
 		panic("game not over")
 	}
@@ -104,7 +104,7 @@ func (s *testGameState) GetResult(currentPlayer int) float64 {
 		return 0.5
 	}
 
-	if s.winner == currentPlayer {
+	if s.winner == currentPlayerToMove {
 		return 0.0
 	}
 	return 1.0

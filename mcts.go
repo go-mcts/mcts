@@ -14,8 +14,8 @@ type State interface {
 	PlayerToMove() int
 	HasMoves() bool
 	GetMoves() []Move
-	DoMove(Move)
-	DoRandomMove(*rand.Rand)
-	GetResult(int) float64
+	DoMove(move Move)
+	DoRandomMove(rd *rand.Rand)
+	GetResult(currentPlayerToMove int) float64
 	Clone() State
 }

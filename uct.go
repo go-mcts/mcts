@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func ComputeTree(rootState State, rd *rand.Rand, opts ...Option) *Node {
+func computeTree(rootState State, rd *rand.Rand, opts ...Option) *node {
 	options := newOptions(opts...)
 
 	if options.MaxIterations < 0 && options.MaxTime < 0 {
@@ -23,20 +23,20 @@ func ComputeTree(rootState State, rd *rand.Rand, opts ...Option) *Node {
 	startTime := time.Now()
 	printTime := startTime
 
-	root := NewNode(rootState)
+	root := newNode(rootState, nil, nil)
 	for i := 1; i <= options.MaxIterations || options.MaxIterations < 0; i++ {
 		node := root
 		state := rootState.Clone()
 
-		for !node.HasUntriedMoves() && node.HasChildren() {
-			node = node.SelectChildUCT()
-			state.DoMove(node.Move)
+		for !node.hasUntriedMoves() && node.hasChildren() {
+			node = node.selectChildUCT()
+			state.DoMove(node.move)
 		}
 
-		if node.HasUntriedMoves() {
-			move := node.GetUntriedMove(rd)
+		if node.hasUntriedMoves() {
+			move := node.getUntriedMove(rd)
 			state.DoMove(move)
-			node = node.AddChild(move, state)
+			node = node.addChild(move, state)
 		}
 
 		for state.HasMoves() {
@@ -44,8 +44,8 @@ func ComputeTree(rootState State, rd *rand.Rand, opts ...Option) *Node {
 		}
 
 		for node != nil {
-			node.Update(state.GetResult(node.PlayerToMove))
-			node = node.Parent
+			node.update(state.GetResult(node.playerToMove))
+			node = node.parent
 		}
 
 		if options.Verbose || options.MaxTime >= 0 {
@@ -82,11 +82,11 @@ func ComputeMove(rootState State, opts ...Option) Move {
 
 	startTime := time.Now()
 
-	rootFutures := make(chan *Node, options.Groutines)
+	rootFutures := make(chan *node, options.Groutines)
 	for i := 0; i < options.Groutines; i++ {
 		go func() {
 			rd := rand.New(rand.NewSource(time.Now().UnixNano()))
-			rootFutures <- ComputeTree(rootState, rd, opts...)
+			rootFutures <- computeTree(rootState, rd, opts...)
 		}()
 	}
 
@@ -95,10 +95,10 @@ func ComputeMove(rootState State, opts ...Option) Move {
 	gamePlayed := 0
 	for i := 0; i < options.Groutines; i++ {
 		root := <-rootFutures
-		gamePlayed += root.Visits
-		for _, c := range root.Children {
-			visits[c.Move] += c.Visits
-			wins[c.Move] += c.Wins
+		gamePlayed += root.visits
+		for _, c := range root.children {
+			visits[c.move] += c.visits
+			wins[c.move] += c.wins
 		}
 	}
 

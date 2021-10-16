@@ -9,79 +9,57 @@ import (
 	"math/rand"
 )
 
-type Node struct {
-	Move         Move
-	Parent       *Node
-	PlayerToMove int
-	Wins         float64
-	Visits       int
-	Moves        []Move
-	Children     []*Node
+type node struct {
+	move         Move
+	parent       *node
+	playerToMove int
+	wins         float64
+	visits       int
+	moves        []Move
+	children     []*node
 }
 
-func NewNode(state State) *Node {
-	return newNode(state, nil, nil)
-}
-
-func newNode(state State, move Move, parent *Node) *Node {
-	return &Node{
-		Move:         move,
-		Parent:       parent,
-		PlayerToMove: state.PlayerToMove(),
-		Wins:         0,
-		Visits:       0,
-		Moves:        state.GetMoves(),
+func newNode(state State, move Move, parent *node) *node {
+	return &node{
+		move:         move,
+		parent:       parent,
+		playerToMove: state.PlayerToMove(),
+		wins:         0,
+		visits:       0,
+		moves:        state.GetMoves(),
 	}
 }
 
-func (p *Node) HasUntriedMoves() bool {
-	return len(p.Moves) > 0
+func (p *node) hasUntriedMoves() bool {
+	return len(p.moves) > 0
 }
 
-func (p *Node) HasChildren() bool {
-	return len(p.Children) > 0
+func (p *node) hasChildren() bool {
+	return len(p.children) > 0
 }
 
-func (p *Node) GetUntriedMove(rd *rand.Rand) Move {
-	l := len(p.Moves)
+func (p *node) getUntriedMove(rd *rand.Rand) Move {
+	l := len(p.moves)
 	if l == 0 {
 		panic("untried moves is empty")
 	}
-	return p.Moves[rd.Intn(l)]
+	return p.moves[rd.Intn(l)]
 }
 
-func (p *Node) BestChild() *Node {
-	if len(p.Moves) > 0 {
-		panic("not full expanded")
-	}
-	l := len(p.Children)
+func (p *node) selectChildUCT() *node {
+	l := len(p.children)
 	if l == 0 {
 		panic("children is empty")
 	}
 
-	best := p.Children[0]
-	for i := 1; i < l; i++ {
-		if p.Children[i].Visits > best.Visits {
-			best = p.Children[i]
-		}
-	}
-	return best
-}
-
-func (p *Node) SelectChildUCT() *Node {
-	l := len(p.Children)
-	if l == 0 {
-		panic("children is empty")
-	}
-
-	best := p.Children[0]
-	bestScore := best.Wins/float64(best.Visits) +
-		math.Sqrt(2.0*math.Log(float64(p.Visits))/float64(best.Visits))
+	best := p.children[0]
+	bestScore := best.wins/float64(best.visits) +
+		math.Sqrt(2.0*math.Log(float64(p.visits))/float64(best.visits))
 
 	for i := 1; i < l; i++ {
-		c := p.Children[i]
-		uctScore := c.Wins/float64(c.Visits) +
-			math.Sqrt(2.0*math.Log(float64(p.Visits))/float64(c.Visits))
+		c := p.children[i]
+		uctScore := c.wins/float64(c.visits) +
+			math.Sqrt(2.0*math.Log(float64(p.visits))/float64(c.visits))
 
 		if uctScore > bestScore {
 			bestScore = uctScore
@@ -91,22 +69,22 @@ func (p *Node) SelectChildUCT() *Node {
 	return best
 }
 
-func (p *Node) AddChild(move Move, state State) *Node {
+func (p *node) addChild(move Move, state State) *node {
 	node := newNode(state, move, p)
-	p.Children = append(p.Children, node)
+	p.children = append(p.children, node)
 
-	l := len(p.Moves)
+	l := len(p.moves)
 	for i := 0; i < l-1; i++ {
-		if p.Moves[i] == move {
-			p.Moves[i] = p.Moves[l-1]
+		if p.moves[i] == move {
+			p.moves[i] = p.moves[l-1]
 			break
 		}
 	}
-	p.Moves = p.Moves[:l-1]
+	p.moves = p.moves[:l-1]
 	return node
 }
 
-func (p *Node) Update(result float64) {
-	p.Visits++
-	p.Wins += result
+func (p *node) update(result float64) {
+	p.visits++
+	p.wins += result
 }

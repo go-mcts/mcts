@@ -7,7 +7,6 @@ package mcts
 import (
 	"math"
 	"math/rand"
-	"reflect"
 )
 
 type Node struct {
@@ -18,7 +17,6 @@ type Node struct {
 	Visits       int
 	Moves        []Move
 	Children     []*Node
-	uctScore     float64
 }
 
 func NewNode(state State) *Node {
@@ -33,7 +31,6 @@ func newNode(state State, move Move, parent *Node) *Node {
 		Wins:         0,
 		Visits:       0,
 		Moves:        state.GetMoves(),
-		uctScore:     0,
 	}
 }
 
@@ -57,27 +54,41 @@ func (p *Node) BestChild() *Node {
 	if len(p.Moves) > 0 {
 		panic("not full expanded")
 	}
-	if len(p.Children) == 0 {
+	l := len(p.Children)
+	if l == 0 {
 		panic("children is empty")
 	}
 
-	return maxElement(p.Children, func(i, j int) bool {
-		return p.Children[i].Visits > p.Children[j].Visits
-	}).(*Node)
+	best := p.Children[0]
+	for i := 1; i < l; i++ {
+		if p.Children[i].Visits > best.Visits {
+			best = p.Children[i]
+		}
+	}
+	return best
 }
 
 func (p *Node) SelectChildUCT() *Node {
-	if len(p.Children) == 0 {
+	l := len(p.Children)
+	if l == 0 {
 		panic("children is empty")
 	}
-	for _, c := range p.Children {
-		c.uctScore = c.Wins/float64(c.Visits) +
-			math.Sqrt(2.0*math.Log(float64(p.Visits))/float64(c.Visits))
-	}
 
-	return maxElement(p.Children, func(i, j int) bool {
-		return p.Children[i].uctScore > p.Children[j].uctScore
-	}).(*Node)
+	best := p.Children[0]
+	bestScore := best.Wins/float64(best.Visits) +
+		math.Sqrt(2.0*math.Log(float64(p.Visits))/float64(best.Visits))
+
+	for i := 1; i < l; i++ {
+		c := p.Children[i]
+		uctScore := c.Wins/float64(c.Visits) +
+			math.Sqrt(2.0*math.Log(float64(p.Visits))/float64(c.Visits))
+
+		if uctScore > bestScore {
+			bestScore = uctScore
+			best = c
+		}
+	}
+	return best
 }
 
 func (p *Node) AddChild(move Move, state State) *Node {
@@ -98,19 +109,4 @@ func (p *Node) AddChild(move Move, state State) *Node {
 func (p *Node) Update(result float64) {
 	p.Visits++
 	p.Wins += result
-}
-
-func maxElement(a interface{}, greater func(i, j int) bool) interface{} {
-	rv := reflect.ValueOf(a)
-	l := rv.Len()
-	if l == 0 {
-		return nil
-	}
-	j := 0
-	for i := 1; i < l; i++ {
-		if greater(i, j) {
-			j = i
-		}
-	}
-	return rv.Index(j).Interface()
 }

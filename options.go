@@ -16,6 +16,13 @@ type Options struct {
 	Verbose       bool
 }
 
+var defaultOptions = Options{
+	Groutines:     runtime.NumCPU(),
+	MaxIterations: 10000,
+	MaxTime:       -1,
+	Verbose:       false,
+}
+
 type Option func(*Options)
 
 func Goroutines(number int) Option {
@@ -43,12 +50,7 @@ func Verbose(v bool) Option {
 }
 
 func newOptions(opts ...Option) Options {
-	options := Options{
-		Groutines:     runtime.NumCPU(),
-		MaxIterations: 10000,
-		MaxTime:       -1,
-		Verbose:       false,
-	}
+	options := defaultOptions
 
 	for _, o := range opts {
 		o(&options)

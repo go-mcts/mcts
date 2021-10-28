@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	_ mcts.Move  = (*move)(nil)
+	_ mcts.Move  = move{}
 	_ mcts.State = (*state)(nil)
 )
 
@@ -40,7 +40,7 @@ func (s *state) GetMoves() []mcts.Move {
 		for i := 0; i < 3; i++ {
 			for j := 0; j < 3; j++ {
 				if s.board[i][j] == 0 {
-					m := &move{
+					m := move{
 						x: i,
 						y: j,
 						v: s.playerToMove,
@@ -59,7 +59,7 @@ func (s *state) GetMoves() []mcts.Move {
 }
 
 func (s *state) DoMove(mctsMove mcts.Move) {
-	m := mctsMove.(*move)
+	m := mctsMove.(move)
 	if m.x < 0 || m.y < 0 || m.x > 2 || m.y > 2 || s.board[m.x][m.y] != 0 {
 		panic("illegal move")
 	}

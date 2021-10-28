@@ -29,4 +29,9 @@ func TestCounter(t *testing.T) {
 	c.incr(newPointer("abc"), 1)
 	c.incr(newPointer("abc"), 1)
 	assert.Equal(t, float64(2), c.get(newPointer("abc")))
+
+	c = newCounter()
+	c.incr("abc", 1)
+	c.incr("abc", 1)
+	assert.Equal(t, float64(2), c.get("abc"))
 }

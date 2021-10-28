@@ -21,7 +21,7 @@ func TestTicTacToe(t *testing.T) {
 		},
 	}
 	mctsMove := mcts.ComputeMove(rootState, mcts.MaxIterations(20000), mcts.Verbose(true))
-	m := mctsMove.(*move)
+	m := mctsMove.(move)
 	assert.Equal(t, 1, m.x)
 	assert.Equal(t, 1, m.y)
 	assert.Equal(t, 1, m.v)
@@ -35,7 +35,7 @@ func TestTicTacToe(t *testing.T) {
 		},
 	}
 	mctsMove = mcts.ComputeMove(rootState, mcts.Verbose(true))
-	m = mctsMove.(*move)
+	m = mctsMove.(move)
 	assert.Equal(t, 1, m.v)
 
 	assert.True(t, m.x == 0 && (m.y == 0 || m.y == 2) ||

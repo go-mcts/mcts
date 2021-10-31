@@ -2,9 +2,11 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package mcts
+package log
 
 import (
+	"os"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -13,11 +15,14 @@ var (
 	defaultLogger Logger
 )
 
+// Init logger with level
 func init() {
-	// TODO: parse env config and add file log
 	cfg := zap.NewDevelopmentConfig()
 	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 	cfg.EncoderConfig.EncodeCaller = nil
+	if _, ok := os.LookupEnv("GO_MCTS_DEBUG"); !ok {
+		cfg.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	}
 	zapLogger, _ := cfg.Build()
 	defaultLogger = zapLogger.Sugar()
 }

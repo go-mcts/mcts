@@ -18,7 +18,7 @@ func TestNim(t *testing.T) {
 				playerToMove: 1,
 				chips:        chips,
 			}
-			move := mcts.ComputeMove(state, mcts.MaxIterations(100000), mcts.Verbose(true))
+			move := mcts.ComputeMove(state, mcts.MaxIterations(100000))
 			assert.Equal(t, chips%4, move)
 		}
 	}

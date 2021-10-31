@@ -14,14 +14,12 @@ type Options struct {
 	Goroutines    int
 	MaxIterations int
 	MaxTime       time.Duration
-	Verbose       bool
 }
 
 var defaultOptions = Options{
 	Goroutines:    runtime.NumCPU(),
 	MaxIterations: 10000,
 	MaxTime:       -1,
-	Verbose:       false,
 }
 
 type Option func(*Options)
@@ -46,13 +44,6 @@ func MaxIterations(iter int) Option {
 func MaxTime(d time.Duration) Option {
 	return func(o *Options) {
 		o.MaxTime = d
-	}
-}
-
-// Verbose print details log, default is false
-func Verbose(v bool) Option {
-	return func(o *Options) {
-		o.Verbose = v
 	}
 }
 

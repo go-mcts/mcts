@@ -122,10 +122,10 @@ type testGameMove int
 
 func TestMCTS(t *testing.T) {
 	state := newTestGameState(1)
-	move := ComputeMove(state, Verbose(true))
+	move := ComputeMove(state)
 	assert.Equal(t, 2, move)
 
 	state = newTestGameState(2)
-	move = ComputeMove(state, Verbose(true))
+	move = ComputeMove(state)
 	assert.Equal(t, 1, move)
 }

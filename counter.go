@@ -51,7 +51,7 @@ func (c *counter) rng(f func(key interface{}, count float64)) {
 func interface2key(i interface{}) interface{} {
 	rt := reflect.TypeOf(i)
 	if rt.Kind() == reflect.Ptr {
-		return fmt.Sprintf("%v", i)
+		return fmt.Sprintf("%#v", i)
 	}
 	return i
 }

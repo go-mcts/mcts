@@ -7,6 +7,8 @@ package mcts
 import (
 	"math/rand"
 	"time"
+
+	"github.com/go-mcts/mcts/internal/log"
 )
 
 func computeTree(rootState State, rd *rand.Rand, opts ...Option) *node {
@@ -48,16 +50,14 @@ func computeTree(rootState State, rd *rand.Rand, opts ...Option) *node {
 			node = node.parent
 		}
 
-		if options.Verbose || options.MaxTime >= 0 {
-			now := time.Now()
-			if options.Verbose && (now.Sub(printTime) >= time.Second || i == options.MaxIterations) {
-				Debugf("%d games played (%.2f / second).", i, float64(i)/now.Sub(startTime).Seconds())
-				printTime = now
-			}
+		now := time.Now()
+		if now.Sub(printTime) >= time.Second || i == options.MaxIterations {
+			log.Debugf("%d games played (%.2f / second).", i, float64(i)/now.Sub(startTime).Seconds())
+			printTime = now
+		}
 
-			if options.MaxTime >= 0 && now.Sub(startTime) >= options.MaxTime {
-				break
-			}
+		if options.MaxTime >= 0 && now.Sub(startTime) >= options.MaxTime {
+			break
 		}
 	}
 
@@ -114,29 +114,25 @@ func ComputeMove(rootState State, opts ...Option) Move {
 			bestScore = expectedSuccessRate
 		}
 
-		if options.Verbose {
-			Debugf("Move: %v (%2d%% visits) (%2d%% wins)",
-				move, int(100.0*v/float64(gamePlayed)+0.5), int(100.0*w/v+0.5))
-		}
+		log.Debugf("Move: %v (%2d%% visits) (%2d%% wins)",
+			move, int(100.0*v/float64(gamePlayed)+0.5), int(100.0*w/v+0.5))
 	})
 
-	if options.Verbose {
-		bestWins := wins.get(bestMove)
-		bestVisits := visits.get(bestMove)
-		Debugf("Best: %v (%2d%% visits) (%2d%% wins)",
-			bestMove,
-			int(100.0*bestVisits/float64(gamePlayed)+0.5),
-			int(100.0*bestWins/bestVisits+0.5),
-		)
+	bestWins := wins.get(bestMove)
+	bestVisits := visits.get(bestMove)
+	log.Infof("Best: %v (%2d%% visits) (%2d%% wins)",
+		bestMove,
+		int(100.0*bestVisits/float64(gamePlayed)+0.5),
+		int(100.0*bestWins/bestVisits+0.5),
+	)
 
-		now := time.Now()
-		Debugf(
-			"%d games played in %.2f s. (%.2f / second, %d parallel jobs).",
-			gamePlayed,
-			now.Sub(startTime).Seconds(),
-			float64(gamePlayed)/now.Sub(startTime).Seconds(),
-			options.Goroutines,
-		)
-	}
+	now := time.Now()
+	log.Infof(
+		"%d games played in %.2f s. (%.2f / second, %d parallel jobs).",
+		gamePlayed,
+		now.Sub(startTime).Seconds(),
+		float64(gamePlayed)/now.Sub(startTime).Seconds(),
+		options.Goroutines,
+	)
 	return bestMove
 }
